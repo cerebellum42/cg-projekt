@@ -23,7 +23,8 @@ public class Example extends AbstractSimpleBase {
     Matrix4f mvp;
     ShaderProgram spGouraud;
     int vaoId, vboIdE, vboIdC, vboIdUv;
-    float[] color;
+    long time;
+    long timePassed;
     float[] ecken;
     float[] textureUv;
     Texture woodTexture;
@@ -183,6 +184,8 @@ public class Example extends AbstractSimpleBase {
 
     @Override
     protected void render() {
+        if (time) timePassed = System.currentTimeMillis() - time;
+        time = time + timePassed;
 
         glClear(GL_COLOR_BUFFER_BIT);
 
