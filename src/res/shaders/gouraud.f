@@ -13,6 +13,10 @@ out vec4 farbe;
 uniform sampler2D textureSampler;
 
 void main(void){
-    //farbe = vec4(uv.x, uv.y, 1, 1);
-    farbe = texture( textureSampler, uv );
+    if (uv.x < 0.01 || uv.x > 0.99 || uv.y < 0.01 || uv.y > 0.99) {
+        farbe = vec4(0,0,0,0);
+    }
+    else {
+        farbe = texture( textureSampler, uv );
+    }
 }

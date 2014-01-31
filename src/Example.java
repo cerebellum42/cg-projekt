@@ -1,5 +1,6 @@
 import static org.lwjgl.opengl.GL11.*;
 
+import static org.lwjgl.opengl.GL11.glGetInteger;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL15.*;
@@ -23,11 +24,13 @@ public class Example extends AbstractSimpleBase {
     Matrix4f mvp;
     ShaderProgram spGouraud;
     int vaoId, vboIdE, vboIdC, vboIdUv;
-    long time;
+    long time = 0;
     long timePassed;
+    float secondsPassed;
     float[] ecken;
     float[] textureUv;
     Texture woodTexture;
+    float degreeToRadian = (float)Math.PI / 180f;
 
     public static void main(String[] args) {
         new Example().start();
@@ -65,8 +68,7 @@ public class Example extends AbstractSimpleBase {
         woodTexture = new Texture("plain_wood.jpg", 4);
 
         spGouraud = new ShaderProgram("gouraud");
-        glBindAttribLocation(spGouraud.getId(), 0, "ecken");
-        glBindAttribLocation(spGouraud.getId(), 1, "color");
+        glBindAttribLocation(spGouraud.getId(), 1, "ecken");
         glBindAttribLocation(spGouraud.getId(), 2, "vertexUv");
 
         glUseProgram(spGouraud.getId());
@@ -129,15 +131,15 @@ public class Example extends AbstractSimpleBase {
         vboIdE = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, vboIdE);
         glBufferData(GL_ARRAY_BUFFER, edgeBuffer, GL_STATIC_DRAW);
-        glVertexAttribPointer(0,3,GL_FLOAT,false,0,0);
+        glVertexAttribPointer(1,3,GL_FLOAT,false,0,0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         textureUv = new float[] {
                 //front
+                1,0,
                 1,1,
                 0,1,
                 0,0,
-                1,0,
 
                 //right
                 1,0,
@@ -146,10 +148,10 @@ public class Example extends AbstractSimpleBase {
                 0,0,
 
                 //back
-                0,0,
                 0,1,
                 1,1,
                 1,0,
+                0,0,
 
                 //left
                 1,1,
@@ -184,27 +186,44 @@ public class Example extends AbstractSimpleBase {
 
     @Override
     protected void render() {
-        if (time) timePassed = System.currentTimeMillis() - time;
+        glClearColor(1f, 1f, 1f, 1f);
+        if (time != 0) {
+            timePassed = System.currentTimeMillis() - time;
+        }
+        else {
+            timePassed = 0;
+            time = System.currentTimeMillis();
+        }
+
         time = time + timePassed;
+        secondsPassed = timePassed/1000f;
+
+        /* Zufallspausen (test für animationsgeschwindigkeit)
+        try {
+            Thread.currentThread().sleep( (long)(Math.random()*50) );
+        }
+        catch(InterruptedException e) {}*/
 
         glClear(GL_COLOR_BUFFER_BIT);
 
         //translate projection matrix
-        mvp.rotate(0.01f,new Vector3f(0,1,0));
+        mvp.rotate(1f * secondsPassed,new Vector3f(0,1,0));
 
         //Draw Object
         glBindVertexArray(vaoId);
-        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
         glDrawArrays(GL_QUADS,0,ecken.length/3);
         glDisableVertexAttribArray(2);
-        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
         glBindVertexArray(0);
 
 
         FloatBuffer fbM = BufferUtils.createFloatBuffer(16);
         mvp.store(fbM);
         fbM.flip();
+        glUniform1i(glGetUniformLocation(spGouraud.getId(), "time"), (int)(time % 3600));
+        glUniform1f(glGetUniformLocation(spGouraud.getId(), "degreeToRadian"), degreeToRadian);
         glUniformMatrix4(glGetUniformLocation(spGouraud.getId(), "frustMatrix"), false, fbM);
     }
 }
