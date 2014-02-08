@@ -20,7 +20,7 @@ import org.lwjgl.util.vector.Vector4f;
 public class Example extends AbstractSimpleBase {
     final float nearPlane = 1;
     final float farPlane = 100;
-    final float fieldOfView = 70f;
+    final float fieldOfView = 60f;
 
     Matrix4f projection;
     Matrix4f view;
@@ -54,9 +54,9 @@ public class Example extends AbstractSimpleBase {
 
         teapot = new ObjModel("teapot.obj", spPhong);
         teapot.modelMatrix = new Matrix4f()
+                .scale(new Vector3f(.3f, .3f, .3f))
                 .translate(new Vector3f(-10, -3, 0))
-                .rotate((float) Math.toRadians(-90), new Vector3f(1, 0, 0))
-                .scale(new Vector3f(.3f, .3f, .3f));
+                .rotate((float) Math.toRadians(-90), new Vector3f(1, 0, 0));
         teapot.writeBuffers();
     }
 
