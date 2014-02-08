@@ -49,13 +49,14 @@ public class Example extends AbstractSimpleBase {
 
     private void loadAssets() {
         cube = new Cube(3);
+        cube.modelMatrix = new Matrix4f().translate(new Vector3f(10f, 2, 0));
         spPhong = new ShaderProgram("phong");
 
         teapot = new ObjModel("teapot.obj", spPhong);
         teapot.modelMatrix = new Matrix4f()
-                .translate(new Vector3f(4, -4, 0))
+                .translate(new Vector3f(-10, -3, 0))
                 .rotate((float) Math.toRadians(-90), new Vector3f(1, 0, 0))
-                .scale(new Vector3f(.4f, .4f, .4f));
+                .scale(new Vector3f(.3f, .3f, .3f));
         teapot.writeBuffers();
     }
 
@@ -76,7 +77,7 @@ public class Example extends AbstractSimpleBase {
     }
 
     private void initView() {
-        view = new Matrix4f().translate(new Vector3f(0,-5,-20f));
+        view = new Matrix4f().translate(new Vector3f(0, -5, -25f));
     }
 
     @Override
@@ -97,7 +98,7 @@ public class Example extends AbstractSimpleBase {
         secondsPassed = timePassed/1000f;
 
         // rotate camera
-        view.rotate(.5f * secondsPassed,new Vector3f(0,1,0));
+        view.rotate(.5f * secondsPassed, new Vector3f(0, 1, 0));
 
         FloatBuffer projectionBuf = BufferUtils.createFloatBuffer(16);
         projection.store(projectionBuf);
@@ -107,8 +108,7 @@ public class Example extends AbstractSimpleBase {
         view.store(viewBuf);
         viewBuf.flip();
 
-
-        //cube.render(mvpBuf);
+        cube.render(viewBuf, projectionBuf);
         teapot.render(viewBuf, projectionBuf);
     }
 }

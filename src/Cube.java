@@ -1,12 +1,14 @@
 import lenz.opengl.utils.ShaderProgram;
 import lenz.opengl.utils.Texture;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.util.vector.Matrix4f;
 
 import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL30.*;
 
 public class Cube {
@@ -18,17 +20,22 @@ public class Cube {
     private ShaderProgram spWoodBox;
     private static final float degreeToRadian = (float)Math.PI / 180f;
 
+    public Matrix4f modelMatrix;
+
     public Cube(float size) {
         this.size = size;
         init();
     }
     
     private void init() {
+        modelMatrix = new Matrix4f();
         createArrays();
         woodTexture = new Texture("plain_wood.jpg", 4);
         spWoodBox = new ShaderProgram("woodenbox");
+        glUseProgram(spWoodBox.getId());
         glBindAttribLocation(spWoodBox.getId(), 0, "ecken");
         glBindAttribLocation(spWoodBox.getId(), 1, "vertexUv");
+        glUseProgram(0);
     }
     
     private void createArrays() {
@@ -138,13 +145,20 @@ public class Cube {
         glBindVertexArray(0);
     }
     
-    public void render(FloatBuffer mvpBuf) {
+    public void render(FloatBuffer view, FloatBuffer projection) {
+        FloatBuffer modelBuf = BufferUtils.createFloatBuffer(16);
+        modelMatrix.store(modelBuf);
+        modelBuf.flip();
+
+        int spId = spWoodBox.getId();
         glBindVertexArray(vaoId);
 
         glUseProgram(spWoodBox.getId());
-        glUniform1i(glGetUniformLocation(spWoodBox.getId(), "time"), (int) (System.currentTimeMillis() % 3600));
-        glUniform1f(glGetUniformLocation(spWoodBox.getId(), "degreeToRadian"), degreeToRadian);
-        glUniformMatrix4(glGetUniformLocation(spWoodBox.getId(), "frustMatrix"), false, mvpBuf);
+        glUniform1i(glGetUniformLocation(spId, "time"), (int) (System.currentTimeMillis() % 3600));
+        glUniform1f(glGetUniformLocation(spId, "degreeToRadian"), degreeToRadian);
+        glUniformMatrix4(glGetUniformLocation(spId, "m"), false, modelBuf);
+        glUniformMatrix4(glGetUniformLocation(spId, "v"), false, view);
+        glUniformMatrix4(glGetUniformLocation(spId, "p"), false, projection);
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
