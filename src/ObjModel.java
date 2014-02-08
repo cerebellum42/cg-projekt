@@ -29,7 +29,7 @@ public class ObjModel {
     private ArrayList<Vector3f> normals;
     private ArrayList<int[][]> faces;
 
-    private Matrix4f modelMatrix;
+    public Matrix4f modelMatrix;
 
     public ObjModel(String resourceName, ShaderProgram sp) {
         load(resourceName);
@@ -140,9 +140,17 @@ public class ObjModel {
         modelMatrix.store(modelBuf);
         modelBuf.flip();
 
-        FloatBuffer viewInv = BufferUtils.createFloatBuffer(16);
-        new Matrix4f().load(view).invert().store(viewInv);
-        viewInv.flip();
+        FloatBuffer projectionBuf = BufferUtils.createFloatBuffer(16);
+        projection.store(projectionBuf);
+        projectionBuf.flip();
+
+        FloatBuffer viewBuf = BufferUtils.createFloatBuffer(16);
+        view.store(viewBuf);
+        viewBuf.flip();
+
+        FloatBuffer viewInvBuf = BufferUtils.createFloatBuffer(16);
+        new Matrix4f(view).invert().store(viewInvBuf);
+        viewInvBuf.flip();
 
         glBindVertexArray(vaoId);
 
@@ -151,15 +159,12 @@ public class ObjModel {
         glBindAttribLocation(spId, 1, "vertexUv");
         glBindAttribLocation(spId, 1, "vertexNormal");
         glUniformMatrix4(glGetUniformLocation(spId, "m"), false, modelBuf);
-        glUniformMatrix4(glGetUniformLocation(spId, "v"), false, view);
-        //glUniformMatrix4(glGetUniformLocation(spId, "vInv"), false, viewInv);
-        glUniformMatrix4(glGetUniformLocation(spId, "p"), false, projection);
+        glUniformMatrix4(glGetUniformLocation(spId, "v"), false, viewBuf);
+        glUniformMatrix4(glGetUniformLocation(spId, "p"), false, projectionBuf);
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-        glEnableVertexAttribArray(2);
         glDrawArrays(GL_TRIANGLES, 0, faces.size() * 3 * 4);
-        glDisableVertexAttribArray(2);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(0);
 
@@ -171,9 +176,5 @@ public class ObjModel {
             resourceName = "/res/models/" + resourceName;
         }
         return this.getClass().getResourceAsStream(resourceName);
-    }
-
-    public void setModelMatrix(Matrix4f m) {
-        modelMatrix = m;
     }
 }

@@ -55,7 +55,7 @@ public class Example extends AbstractSimpleBase {
         teapot = new ObjModel("teapot.obj", spPhong);
         teapot.setModelMatrix(new Matrix4f()
                 .scale(new Vector3f(.3f, .3f, .3f))
-                .translate(new Vector3f(-10, -3, 0))
+                .translate(new Vector3f(-15, -3, 0))
                 .rotate((float) Math.toRadians(-90), new Vector3f(1, 0, 0)));
         teapot.writeBuffers();
     }
@@ -77,7 +77,9 @@ public class Example extends AbstractSimpleBase {
     }
 
     private void initView() {
-        view = new Matrix4f().translate(new Vector3f(0, -5, -25f));
+        view = new Matrix4f()
+                .rotate((float)Math.toRadians(20), new Vector3f(1,0,0))
+                .translate(new Vector3f(0, -15, -25));
     }
 
     private void updateTime() {
@@ -113,6 +115,6 @@ public class Example extends AbstractSimpleBase {
         viewBuf.flip();
 
         cube.render(viewBuf, projectionBuf);
-        teapot.render(viewBuf, projectionBuf);
+        teapot.render(view, projection);
     }
 }

@@ -13,7 +13,7 @@ uniform mat4 m, v, p;
 void main(void) {
     vec4 vCoord4 = vec4(vertexCoord, 1);
     uv = vertexUv;
-    //normal = normalize(mat3(m) * vertexNormal);
-    //fragPosition = vCoord4;
+    normal = normalize(mat3(m) * vertexNormal);
+    fragPosition = vCoord4;
     gl_Position = p * v * m * vCoord4;
 }
