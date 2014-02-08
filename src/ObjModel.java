@@ -2,10 +2,7 @@ import com.sun.deploy.util.BufferUtil;
 import com.sun.prism.ps.Shader;
 import lenz.opengl.utils.ShaderProgram;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector2f;
-import org.lwjgl.util.vector.Vector3f;
-import org.lwjgl.util.vector.Vector4f;
+import org.lwjgl.util.vector.*;
 
 import java.io.*;
 import java.nio.FloatBuffer;
@@ -32,7 +29,7 @@ public class ObjModel {
     private ArrayList<Vector3f> normals;
     private ArrayList<int[][]> faces;
 
-    public Matrix4f modelMatrix;
+    private Matrix4f modelMatrix;
 
     public ObjModel(String resourceName, ShaderProgram sp) {
         load(resourceName);
@@ -143,6 +140,10 @@ public class ObjModel {
         modelMatrix.store(modelBuf);
         modelBuf.flip();
 
+        FloatBuffer viewInv = BufferUtils.createFloatBuffer(16);
+        new Matrix4f().load(view).invert().store(viewInv);
+        viewInv.flip();
+
         glBindVertexArray(vaoId);
 
         glUseProgram(spId);
@@ -151,11 +152,14 @@ public class ObjModel {
         glBindAttribLocation(spId, 1, "vertexNormal");
         glUniformMatrix4(glGetUniformLocation(spId, "m"), false, modelBuf);
         glUniformMatrix4(glGetUniformLocation(spId, "v"), false, view);
+        //glUniformMatrix4(glGetUniformLocation(spId, "vInv"), false, viewInv);
         glUniformMatrix4(glGetUniformLocation(spId, "p"), false, projection);
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
         glDrawArrays(GL_TRIANGLES, 0, faces.size() * 3 * 4);
+        glDisableVertexAttribArray(2);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(0);
 
@@ -167,5 +171,9 @@ public class ObjModel {
             resourceName = "/res/models/" + resourceName;
         }
         return this.getClass().getResourceAsStream(resourceName);
+    }
+
+    public void setModelMatrix(Matrix4f m) {
+        modelMatrix = m;
     }
 }
