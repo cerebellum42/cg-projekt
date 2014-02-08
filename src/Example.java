@@ -80,12 +80,7 @@ public class Example extends AbstractSimpleBase {
         view = new Matrix4f().translate(new Vector3f(0, -5, -25f));
     }
 
-    @Override
-    protected void render() {
-        glClearColor(1, 1, 1, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClear(GL_DEPTH_BUFFER_BIT);
-
+    private void updateTime() {
         if (time != 0) {
             timePassed = System.currentTimeMillis() - time;
         }
@@ -96,6 +91,15 @@ public class Example extends AbstractSimpleBase {
 
         time = time + timePassed;
         secondsPassed = timePassed/1000f;
+    }
+
+    @Override
+    protected void render() {
+        glClearColor(1, 1, 1, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        updateTime();
 
         // rotate camera
         view.rotate(.5f * secondsPassed, new Vector3f(0, 1, 0));
