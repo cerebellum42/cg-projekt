@@ -135,7 +135,7 @@ public class ObjModel {
         glBindVertexArray(0);
     }
 
-    public void render(FloatBuffer view, FloatBuffer projection) {
+    public void render(Matrix4f view, Matrix4f projection) {
         FloatBuffer modelBuf = BufferUtils.createFloatBuffer(16);
         modelMatrix.store(modelBuf);
         modelBuf.flip();
@@ -158,6 +158,7 @@ public class ObjModel {
         glBindAttribLocation(spId, 0, "vertex");
         glBindAttribLocation(spId, 1, "vertexUv");
         glBindAttribLocation(spId, 1, "vertexNormal");
+        glUniformMatrix4(glGetUniformLocation(spId, "vInv"), false, viewInvBuf);
         glUniformMatrix4(glGetUniformLocation(spId, "m"), false, modelBuf);
         glUniformMatrix4(glGetUniformLocation(spId, "v"), false, viewBuf);
         glUniformMatrix4(glGetUniformLocation(spId, "p"), false, projectionBuf);

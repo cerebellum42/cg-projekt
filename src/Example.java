@@ -53,10 +53,10 @@ public class Example extends AbstractSimpleBase {
         spPhong = new ShaderProgram("phong");
 
         teapot = new ObjModel("teapot.obj", spPhong);
-        teapot.setModelMatrix(new Matrix4f()
+        teapot.modelMatrix = new Matrix4f()
                 .scale(new Vector3f(.3f, .3f, .3f))
                 .translate(new Vector3f(-15, -3, 0))
-                .rotate((float) Math.toRadians(-90), new Vector3f(1, 0, 0)));
+                .rotate((float) Math.toRadians(-90), new Vector3f(1, 0, 0));
         teapot.writeBuffers();
     }
 

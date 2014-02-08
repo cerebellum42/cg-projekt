@@ -33,16 +33,13 @@ struct material
 };
 
 material frontMaterial = material(
+    vec4(0.0, 0.0, 1.0, 1.0),
     vec4(0.4, 0.4, 0.9, 1.0),
-    vec4(0.2, 0.2, 1, 1.0),
     vec4(1.0, 1.0, 1.0, 1.0),
     5.0
 );
 
 void main() {
-    //frontMaterial.diffuse = vec4(uv, 1, 1) * (int(uv.x * 10 + 0.5) % 2) * (int(uv.y * 10 + 0.5) % 2);
-    //frontMaterial.ambient = frontMaterial.diffuse * 0.6;
-
     vec3 normalDirection = normalize(normal);
     vec3 viewDirection = normalize(vec3(vInv * vec4(0.0, 0.0, 0.0, 1.0) - fragPosition));
     vec3 lightDirection;
