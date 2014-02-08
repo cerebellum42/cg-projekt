@@ -1,3 +1,4 @@
+import com.sun.deploy.util.BufferUtil;
 import com.sun.prism.ps.Shader;
 import lenz.opengl.utils.ShaderProgram;
 import org.lwjgl.BufferUtils;
@@ -31,8 +32,11 @@ public class ObjModel {
     private ArrayList<Vector3f> normals;
     private ArrayList<int[][]> faces;
 
+    public Matrix4f modelMatrix;
+
     public ObjModel(String resourceName, ShaderProgram sp) {
         load(resourceName);
+        modelMatrix = new Matrix4f();
         spId = sp.getId();
     }
 
@@ -134,14 +138,20 @@ public class ObjModel {
         glBindVertexArray(0);
     }
 
-    public void render(FloatBuffer mvpBuf) {
+    public void render(FloatBuffer view, FloatBuffer projection) {
+        FloatBuffer modelBuf = BufferUtils.createFloatBuffer(16);
+        modelMatrix.store(modelBuf);
+        modelBuf.flip();
+
         glBindVertexArray(vaoId);
 
         glUseProgram(spId);
         glBindAttribLocation(spId, 0, "vertex");
         glBindAttribLocation(spId, 1, "vertexUv");
         glBindAttribLocation(spId, 1, "vertexNormal");
-        glUniformMatrix4(glGetUniformLocation(spId, "mvp"), false, mvpBuf);
+        glUniformMatrix4(glGetUniformLocation(spId, "m"), false, modelBuf);
+        glUniformMatrix4(glGetUniformLocation(spId, "v"), false, view);
+        glUniformMatrix4(glGetUniformLocation(spId, "p"), false, projection);
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
@@ -157,13 +167,5 @@ public class ObjModel {
             resourceName = "/res/models/" + resourceName;
         }
         return this.getClass().getResourceAsStream(resourceName);
-    }
-
-    public void transform(Matrix4f transformMatrix) {
-        for (int i = 0; i < vertices.size(); i++) {
-            Vector3f v = vertices.get(i);
-            Vector4f tr = Matrix4f.transform(transformMatrix, new Vector4f(v.x, v.y, v.z, 1), null);
-            vertices.set(i, new Vector3f(tr.x/tr.w, tr.y/tr.w, tr.z/tr.w));
-        }
     }
 }

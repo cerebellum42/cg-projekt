@@ -1,6 +1,5 @@
 import static org.lwjgl.opengl.GL11.*;
 
-import static org.lwjgl.opengl.GL11.glGetInteger;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL15.*;
@@ -8,6 +7,8 @@ import static org.lwjgl.opengl.GL15.*;
 import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -17,9 +18,13 @@ import lenz.opengl.utils.Texture;
 import org.lwjgl.util.vector.Vector4f;
 
 public class Example extends AbstractSimpleBase {
+    final float nearPlane = 1;
+    final float farPlane = 100;
+    final float fieldOfView = 70f;
 
-    Matrix4f projection = new Matrix4f();
-    Matrix4f mvp;
+    Matrix4f projection;
+    Matrix4f view;
+
     long time = 0;
     long timePassed;
     float secondsPassed;
@@ -33,47 +38,45 @@ public class Example extends AbstractSimpleBase {
 
     @Override
     protected void initOpenGL() {
-        float nearPlane = 1;
-        float farPlane = 100;
-        float right = 1;
-        float left = -1;
-        float bottom = -1;
-        float top = 1;
+        glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
 
-        float A = (right + left) / (right-left);
-        float B = (top+bottom) / (top-bottom);
-        float C = -((farPlane+nearPlane) / (farPlane - nearPlane));
-        float D = -((2*farPlane*nearPlane)/(farPlane - nearPlane));
+        initProjection();
+        initView();
+        loadAssets();
+    }
 
-        projection.m00 = 2*nearPlane/(right-left);
-        projection.m20 = A;
-
-        projection.m11 = 2*nearPlane/(top-bottom);
-        projection.m21 = B;
-
-        projection.m22 = C;
-        projection.m32 = D;
-
-        projection.m23 = -1;
-
-        mvp = new Matrix4f(projection);
-        mvp.translate(new Vector3f(0,-5,-20f));
-
+    private void loadAssets() {
         cube = new Cube(3);
         spPhong = new ShaderProgram("phong");
 
         teapot = new ObjModel("teapot.obj", spPhong);
-        teapot.transform(new Matrix4f()
+        teapot.modelMatrix = new Matrix4f()
                 .translate(new Vector3f(4, -4, 0))
                 .rotate((float) Math.toRadians(-90), new Vector3f(1, 0, 0))
-                .scale(new Vector3f(.4f, .4f, .4f))
-        );
+                .scale(new Vector3f(.4f, .4f, .4f));
         teapot.writeBuffers();
+    }
 
+    private void initProjection() {
+        DisplayMode dm = Display.getDisplayMode();
+        float aspectRatio = (float)dm.getWidth() / dm.getHeight();
+        float yScale = 1 / (float)Math.tan(Math.toRadians( (double)fieldOfView / 2 ));
+        float xScale = yScale / aspectRatio;
+        float frustumLength = farPlane - nearPlane;
 
-        glEnable(GL_CULL_FACE);
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
+        projection = new Matrix4f();
+        projection.m00 = xScale;
+        projection.m11 = yScale;
+        projection.m22 = -((farPlane + nearPlane) / frustumLength);
+        projection.m23 = -1;
+        projection.m32 = -((2 * nearPlane * farPlane) / frustumLength);
+        projection.m33 = 0;
+    }
+
+    private void initView() {
+        view = new Matrix4f().translate(new Vector3f(0,-5,-20f));
     }
 
     @Override
@@ -93,15 +96,19 @@ public class Example extends AbstractSimpleBase {
         time = time + timePassed;
         secondsPassed = timePassed/1000f;
 
+        // rotate camera
+        view.rotate(.5f * secondsPassed,new Vector3f(0,1,0));
 
-        //translate projection matrix
-        mvp.rotate(.5f * secondsPassed,new Vector3f(0,1,0));
+        FloatBuffer projectionBuf = BufferUtils.createFloatBuffer(16);
+        projection.store(projectionBuf);
+        projectionBuf.flip();
 
-        FloatBuffer mvpBuf = BufferUtils.createFloatBuffer(16);
-        mvp.store(mvpBuf);
-        mvpBuf.flip();
+        FloatBuffer viewBuf = BufferUtils.createFloatBuffer(16);
+        view.store(viewBuf);
+        viewBuf.flip();
+
 
         //cube.render(mvpBuf);
-        teapot.render(mvpBuf);
+        teapot.render(viewBuf, projectionBuf);
     }
 }
