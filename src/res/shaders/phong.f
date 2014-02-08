@@ -1,3 +1,7 @@
+// Der Fragment-Shader basiert auf dem Code von:
+// http://en.wikibooks.org/wiki/GLSL_Programming/GLUT/Smooth_Specular_Highlights
+// Grundstruktur, vor allem die Structs, übernommen, viele Details angepasst und etwas vereinfacht
+
 in vec2 uv;
 in vec3 normal;
 in vec4 fragPosition;
@@ -36,10 +40,11 @@ material frontMaterial = material(
     vec4(0.0, 0.0, 1.0, 1.0),
     vec4(0.4, 0.4, 0.9, 1.0),
     vec4(1.0, 1.0, 1.0, 1.0),
-    7.0
+    11.0
 );
 
 void main() {
+    // lustige Prozedurale Textur hier
     frontMaterial.diffuse = vec4(abs(sin(uv.x * 10)), abs(cos(uv.y * 10)), abs(cos(uv.x * 10)), 1);
     frontMaterial.ambient = frontMaterial.diffuse;
 
