@@ -5,32 +5,27 @@ import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL15.*;
 
-import java.awt.event.KeyEvent;
 import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.Sys;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
-import org.lwjgl.util.vector.Vector4f;
 
 import lenz.opengl.AbstractSimpleBase;
 import lenz.opengl.utils.ShaderProgram;
 import lenz.opengl.utils.Texture;
+import org.lwjgl.util.vector.Vector4f;
 
 public class Example extends AbstractSimpleBase {
 
     Matrix4f projection = new Matrix4f();
     Matrix4f mvp;
-    ShaderProgram spGouraud;
-    int vaoId, vboIdE, vboIdC, vboIdUv;
     long time = 0;
     long timePassed;
     float secondsPassed;
-    float[] ecken;
-    float[] textureUv;
-    Texture woodTexture;
-    float degreeToRadian = (float)Math.PI / 180f;
+    Cube cube;
+    ObjModel teapot;
+    ShaderProgram spPhong;
 
     public static void main(String[] args) {
         new Example().start();
@@ -64,129 +59,29 @@ public class Example extends AbstractSimpleBase {
         mvp = new Matrix4f(projection);
         mvp.translate(new Vector3f(0,-5,-20f));
 
-        wuerfel();
-        woodTexture = new Texture("plain_wood.jpg", 4);
+        cube = new Cube(3);
+        spPhong = new ShaderProgram("phong");
 
-        spGouraud = new ShaderProgram("gouraud");
-        glBindAttribLocation(spGouraud.getId(), 1, "ecken");
-        glBindAttribLocation(spGouraud.getId(), 2, "vertexUv");
+        teapot = new ObjModel("teapot.obj", spPhong);
+        teapot.transform(new Matrix4f()
+                .translate(new Vector3f(4, -4, 0))
+                .rotate((float) Math.toRadians(-90), new Vector3f(1, 0, 0))
+                .scale(new Vector3f(.4f, .4f, .4f))
+        );
+        teapot.writeBuffers();
 
-        glUseProgram(spGouraud.getId());
 
         glEnable(GL_CULL_FACE);
-        //glEnable(GL_DEPTH_TEST);
-    }
-
-    /*
-     * Draws a cube
-     */
-    protected void wuerfel(){
-        //GEGEN DEN URZEIGERSINN <- AUßENSEITE
-
-        ecken = new float[]{
-                //front
-                4,4,4,
-                -4,4,4,
-                -4,-4,4,
-                4,-4,4,
-
-                //right
-                4,4,-4,
-                4,4,4,
-                4,-4,4,
-                4,-4,-4,
-
-                //back
-                -4,-4,-4,
-                -4,4,-4,
-                4,4,-4,
-                4,-4,-4,
-
-                //left
-                -4,4,4,
-                -4,4,-4,
-                -4,-4,-4,
-                -4,-4,4,
-
-                //top
-                -4,4,-4,
-                -4,4,4,
-                4,4,4,
-                4,4,-4,
-
-                //bottom
-                -4,-4,4,
-                -4,-4,-4,
-                4,-4,-4,
-                4,-4,4
-        };
-
-        //Create Model
-        FloatBuffer edgeBuffer = BufferUtils.createFloatBuffer(ecken.length);
-        edgeBuffer.put(ecken);
-        edgeBuffer.flip();
-
-        vaoId = glGenVertexArrays();
-        glBindVertexArray(vaoId);
-        vboIdE = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, vboIdE);
-        glBufferData(GL_ARRAY_BUFFER, edgeBuffer, GL_STATIC_DRAW);
-        glVertexAttribPointer(1,3,GL_FLOAT,false,0,0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        textureUv = new float[] {
-                //front
-                1,0,
-                1,1,
-                0,1,
-                0,0,
-
-                //right
-                1,0,
-                1,1,
-                0,1,
-                0,0,
-
-                //back
-                0,1,
-                1,1,
-                1,0,
-                0,0,
-
-                //left
-                1,1,
-                1,0,
-                0,0,
-                0,1,
-
-                //top
-                0,0,
-                0,1,
-                1,1,
-                1,0,
-
-                //bottom
-                0,1,
-                0,0,
-                1,0,
-                1,1
-        };
-
-        //Create UV
-        FloatBuffer uvBuffer = BufferUtils.createFloatBuffer(textureUv.length);
-        uvBuffer.put(textureUv);
-        uvBuffer.flip();
-
-        vboIdUv = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, vboIdUv);
-        glBufferData(GL_ARRAY_BUFFER, uvBuffer, GL_STATIC_DRAW);
-        glVertexAttribPointer(2,2,GL_FLOAT,false,0,0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
     }
 
     @Override
     protected void render() {
-        glClearColor(1f, 1f, 1f, 1f);
+        glClearColor(1, 1, 1, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
         if (time != 0) {
             timePassed = System.currentTimeMillis() - time;
         }
@@ -198,32 +93,15 @@ public class Example extends AbstractSimpleBase {
         time = time + timePassed;
         secondsPassed = timePassed/1000f;
 
-        /* Zufallspausen (test für animationsgeschwindigkeit)
-        try {
-            Thread.currentThread().sleep( (long)(Math.random()*50) );
-        }
-        catch(InterruptedException e) {}*/
-
-        glClear(GL_COLOR_BUFFER_BIT);
 
         //translate projection matrix
-        mvp.rotate(1f * secondsPassed,new Vector3f(0,1,0));
+        mvp.rotate(.5f * secondsPassed,new Vector3f(0,1,0));
 
-        //Draw Object
-        glBindVertexArray(vaoId);
-        glEnableVertexAttribArray(1);
-        glEnableVertexAttribArray(2);
-        glDrawArrays(GL_QUADS,0,ecken.length/3);
-        glDisableVertexAttribArray(2);
-        glDisableVertexAttribArray(1);
-        glBindVertexArray(0);
+        FloatBuffer mvpBuf = BufferUtils.createFloatBuffer(16);
+        mvp.store(mvpBuf);
+        mvpBuf.flip();
 
-
-        FloatBuffer fbM = BufferUtils.createFloatBuffer(16);
-        mvp.store(fbM);
-        fbM.flip();
-        glUniform1i(glGetUniformLocation(spGouraud.getId(), "time"), (int)(time % 3600));
-        glUniform1f(glGetUniformLocation(spGouraud.getId(), "degreeToRadian"), degreeToRadian);
-        glUniformMatrix4(glGetUniformLocation(spGouraud.getId(), "frustMatrix"), false, fbM);
+        //cube.render(mvpBuf);
+        teapot.render(mvpBuf);
     }
 }
