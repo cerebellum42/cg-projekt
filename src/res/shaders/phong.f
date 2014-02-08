@@ -19,7 +19,7 @@ lightSource light0 = lightSource(
     vec4(-20, -20, 20, 1),
     vec4(1.0,1.0,1.0, 1.0),
     vec4(1.0,1.0,1.0, 1.0),
-    0.0, 0.7, 0.3
+    0.01, 0.6, 0.6
 );
 
 vec4 scene_ambient = vec4(0.5, 0.5, 0.5, 1.0);
@@ -36,10 +36,13 @@ material frontMaterial = material(
     vec4(0.0, 0.0, 1.0, 1.0),
     vec4(0.4, 0.4, 0.9, 1.0),
     vec4(1.0, 1.0, 1.0, 1.0),
-    5.0
+    7.0
 );
 
 void main() {
+    frontMaterial.diffuse = vec4(abs(sin(uv.x * 10)), abs(cos(uv.y * 10)), abs(cos(uv.x * 10)), 1);
+    frontMaterial.ambient = frontMaterial.diffuse;
+
     vec3 normalDirection = normalize(normal);
     vec3 viewDirection = normalize(vec3(vInv * vec4(0.0, 0.0, 0.0, 1.0) - fragPosition));
     vec3 lightDirection;

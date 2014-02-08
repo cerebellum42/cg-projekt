@@ -106,6 +106,9 @@ public class Example extends AbstractSimpleBase {
         // rotate camera
         view.rotate(.5f * secondsPassed, new Vector3f(0, 1, 0));
 
+        // rotate cube
+        cube.modelMatrix.rotate(.5f * secondsPassed, new Vector3f(1,1,0));
+
         FloatBuffer projectionBuf = BufferUtils.createFloatBuffer(16);
         projection.store(projectionBuf);
         projectionBuf.flip();
